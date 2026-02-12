@@ -41,15 +41,15 @@ public abstract class TerFileBase
         this.GridMaxX = gridMaxX;
         this.GridMaxZ = gridMaxZ;
 
-        ColorMap = new Color24[Width, Height];
+        ColorMap = new Color24[Height, Width];
         Alpha = new byte[3][,]
         {
-            new byte[Width, Height],
-            new byte[Width, Height],
-            new byte[Width, Height]
+            new byte[Height, Width],
+            new byte[Height, Width],
+            new byte[Height, Width]
         };
-        Cell = new CellType[Width, Height];
-        Info = new UInt32[Width / CLUSTER_SIZE, Height / CLUSTER_SIZE];
+        Cell = new CellType[Height, Width];
+        Info = new UInt32[Height / CLUSTER_SIZE, Width / CLUSTER_SIZE];
     }
 
     #region Read Methods
@@ -143,7 +143,7 @@ public abstract class TerFileBase
             {
                 for (int cx = 0; cx < CLUSTER_SIZE; cx++)
                 {
-                    ColorMap[x + cx, y + cy] = new Color24(R, G, B);
+                    ColorMap[y + cy, x + cx] = new Color24(R, G, B);
                 }
             }
         }
@@ -157,7 +157,7 @@ public abstract class TerFileBase
                     byte G = reader.ReadByte();
                     byte B = reader.ReadByte();
 
-                    ColorMap[x + cx, y + cy] = new Color24(R, G, B);
+                    ColorMap[y + cy, x + cx] = new Color24(R, G, B);
                 }
                 if (Version < 3) reader.ReadBytes(3); // 5th vertex (from next cluster)
             }
@@ -181,7 +181,7 @@ public abstract class TerFileBase
             {
                 for (int cx = 0; cx < CLUSTER_SIZE; cx++)
                 {
-                    Alpha[layer - 1][x + cx, y + cy] = value;
+                    Alpha[layer - 1][y + cy, x + cx] = value;
                 }
             }
         }
@@ -192,7 +192,7 @@ public abstract class TerFileBase
                 for (int cx = 0; cx < CLUSTER_SIZE; cx++)
                 {
                     byte value = reader.ReadByte();
-                    Alpha[layer - 1][x + cx, y + cy] = value;
+                    Alpha[layer - 1][y + cy, x + cx] = value;
                 }
                 if (Version < 3) reader.BaseStream.Seek(1, SeekOrigin.Current); // 5th vertex (from next cluster)
             }
@@ -210,7 +210,7 @@ public abstract class TerFileBase
         byte t1 = reader.ReadByte();
         byte t2 = reader.ReadByte();
         byte t3 = reader.ReadByte();
-        Info[x / CLUSTER_SIZE, y / CLUSTER_SIZE] = (UInt32)(t3 << 24 | t2 << 16 | t1 << 8 | t0);
+        Info[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = (UInt32)(t3 << 24 | t2 << 16 | t1 << 8 | t0);
     }
     protected void ReadClusterCell(BinaryReader reader, int x, int y, bool compressed)
     {
@@ -231,7 +231,7 @@ public abstract class TerFileBase
             {
                 for (int cx = 0; cx < CLUSTER_SIZE; cx++)
                 {
-                    Cell[x + cx, y + cy] = cellType;
+                    Cell[y + cy, x + cx] = cellType;
                 }
             }
         }
@@ -243,7 +243,7 @@ public abstract class TerFileBase
                 {
                     byte value = reader.ReadByte();
                     CellType cellType = (CellType)value;
-                    Cell[x + cx, y + cy] = cellType;
+                    Cell[y + cy, x + cx] = cellType;
                 }
                 if (Version < 3) reader.BaseStream.Seek(1, SeekOrigin.Current); // 5th vertex (from next cluster)
             }
@@ -260,7 +260,7 @@ public abstract class TerFileBase
         }
 
         UInt32 value = reader.ReadUInt32();
-        Info[x / CLUSTER_SIZE, y / CLUSTER_SIZE] = value;
+        Info[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = value;
     }
     #endregion Read Methods
 }
@@ -275,8 +275,8 @@ public class BZ2TerFile : TerFileBase
 
     public BZ2TerFile(UInt32 version, Int16 gridMinX, Int16 gridMinZ, Int16 gridMaxX, Int16 gridMaxZ) : base(version, gridMinX, gridMinZ, gridMaxX, gridMaxZ)
     {
-        HeightMap = new Int16[Width, Height];
-        NormalMap = new byte[Width, Height];
+        HeightMap = new Int16[Height, Width];
+        NormalMap = new byte[Height, Width];
     }
 
     protected override void ReadClusterHeights(BinaryReader reader, int x, int y, bool compressed)
@@ -286,7 +286,7 @@ public class BZ2TerFile : TerFileBase
             for (int cx = 0; cx < CLUSTER_SIZE; cx++)
             {
                 short value = reader.ReadInt16();
-                HeightMap[x + cx, y + cy] = value;
+                HeightMap[y + cy, x + cx] = value;
             }
             if (Version < 3) reader.ReadInt16(); // 5th vertex (from next cluster)
         }
@@ -300,7 +300,7 @@ public class BZ2TerFile : TerFileBase
             for (int cx = 0; cx < CLUSTER_SIZE; cx++)
             {
                 byte value = reader.ReadByte();
-                NormalMap[x + cx, y + cy] = value;
+                NormalMap[y + cy, x + cx] = value;
             }
             if (Version < 3) reader.BaseStream.Seek(1, SeekOrigin.Current); // 5th vertex (from next cluster)
         }
@@ -318,7 +318,7 @@ public class BZCCTerFile : TerFileBase
 
     public BZCCTerFile(UInt32 version, Int16 gridMinX, Int16 gridMinZ, Int16 gridMaxX, Int16 gridMaxZ) : base(version, gridMinX, gridMinZ, gridMaxX, gridMaxZ)
     {
-        HeightMap = new float[Width, Height];
+        HeightMap = new float[Height, Width];
     }
 
     protected override void ReadClusterHeights(BinaryReader reader, int x, int y, bool compressed)
@@ -330,7 +330,7 @@ public class BZCCTerFile : TerFileBase
             {
                 for (int cx = 0; cx < CLUSTER_SIZE; cx++)
                 {
-                    HeightMap[x + cx, y + cy] = value;
+                    HeightMap[y + cy, x + cx] = value;
                 }
             }
         }
@@ -341,7 +341,7 @@ public class BZCCTerFile : TerFileBase
                 for (int cx = 0; cx < CLUSTER_SIZE; cx++)
                 {
                     float value = reader.ReadSingle();
-                    HeightMap[x + cx, y + cy] = value;
+                    HeightMap[y + cy, x + cx] = value;
                 }
             }
         }
