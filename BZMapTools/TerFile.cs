@@ -30,6 +30,10 @@ public abstract class TerFileBase
     public byte[][,] Alpha { get; protected set; }
     public CellType[,] Cell { get; protected set; }
     public UInt32[,] Info { get; protected set; }
+    public byte[,] TextureLayer0 { get; protected set; }
+    public byte[,] TextureLayer1 { get; protected set; }
+    public byte[,] TextureLayer2 { get; protected set; }
+    public byte[,] TextureLayer3 { get; protected set; }
 
     #endregion Properties
 
@@ -50,6 +54,10 @@ public abstract class TerFileBase
         };
         Cell = new CellType[Height, Width];
         Info = new UInt32[Height / CLUSTER_SIZE, Width / CLUSTER_SIZE];
+        TextureLayer0 = new byte[Height / CLUSTER_SIZE, Width / CLUSTER_SIZE];
+        TextureLayer1 = new byte[Height / CLUSTER_SIZE, Width / CLUSTER_SIZE];
+        TextureLayer2 = new byte[Height / CLUSTER_SIZE, Width / CLUSTER_SIZE];
+        TextureLayer3 = new byte[Height / CLUSTER_SIZE, Width / CLUSTER_SIZE];
     }
 
     #region Read Methods
@@ -211,6 +219,10 @@ public abstract class TerFileBase
         byte t2 = reader.ReadByte();
         byte t3 = reader.ReadByte();
         Info[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = (UInt32)(t3 << 24 | t2 << 16 | t1 << 8 | t0);
+        TextureLayer0[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = t0;
+        TextureLayer1[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = t1;
+        TextureLayer2[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = t2;
+        TextureLayer3[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = t3;
     }
     protected void ReadClusterCell(BinaryReader reader, int x, int y, bool compressed)
     {
@@ -261,6 +273,10 @@ public abstract class TerFileBase
 
         UInt32 value = reader.ReadUInt32();
         Info[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = value;
+        TextureLayer0[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = (byte)(value & 0xF);
+        TextureLayer1[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = (byte)((value >> 4) & 0xF);
+        TextureLayer2[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = (byte)((value >> 8) & 0xF);
+        TextureLayer3[y / CLUSTER_SIZE, x / CLUSTER_SIZE] = (byte)((value >> 12) & 0xF);
     }
     #endregion Read Methods
 }
